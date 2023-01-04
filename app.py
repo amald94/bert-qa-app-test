@@ -78,7 +78,7 @@ button = st.button("Ask")
 @st.cache(allow_output_mutation=True)
 def get_model():
 
-    modelname = 'deepset/bert-base-cased-squad2'
+    modelname = 'deepset/tinyroberta-squad2'
     model = BertForQuestionAnswering.from_pretrained(modelname)
     tokenizer = AutoTokenizer.from_pretrained(modelname)
 
