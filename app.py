@@ -1,5 +1,5 @@
 import streamlit as st
-from transformers import BertForQuestionAnswering, AutoTokenizer
+from transformers import BertForQuestionAnswering, AutoModelForQuestionAnswering, AutoTokenizer
 from transformers import pipeline
 
 
@@ -79,7 +79,7 @@ button = st.button("Ask")
 def get_model():
 
     modelname = 'deepset/tinyroberta-squad2'
-    model = BertForQuestionAnswering.from_pretrained(modelname)
+    model = AutoModelForQuestionAnswering.from_pretrained(modelname)
     tokenizer = AutoTokenizer.from_pretrained(modelname)
 
     nlp = pipeline('question-answering', model=model, tokenizer=tokenizer)
