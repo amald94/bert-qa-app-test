@@ -13,7 +13,8 @@ with c30:
     # st.image("logo.png", width=400)
     st.title("🔎 BERT QA App! ")
     st.header("")
-
+    
+@st.cache(allow_output_mutation=True)
 def _load_models():
     modelname = 'deepset/bert-base-cased-squad2'
     model = BertForQuestionAnswering.from_pretrained(modelname)
