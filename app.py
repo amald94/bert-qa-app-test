@@ -14,6 +14,21 @@ with c30:
     st.title("🔎 BERT QA App! ")
     st.header("")
 
+def _load_models():
+    modelname = 'deepset/bert-base-cased-squad2'
+    model = BertForQuestionAnswering.from_pretrained(modelname)
+    tokenizer = AutoTokenizer.from_pretrained(modelname)
+    nlp1 = pipeline('question-answering', model=model, tokenizer=tokenizer)
+
+    modelname_tiny = 'deepset/tinyroberta-squad2'
+    model_tiny = AutoModelForQuestionAnswering.from_pretrained(modelname_tiny)
+    tokenizer_tiny = AutoTokenizer.from_pretrained(modelname_tiny)
+    nlp2 = pipeline('question-answering', model=model_tiny, tokenizer=tokenizer_tiny)
+
+    return nlp1, nlp2 
+
+nlp1, nlp2 = _load_models()
+
 context = (
            "The Information and Communications Technology Council (ICTC) "
            "A not-for-profit national centre of expertise for the digital economy, we are the trusted source for evidence-based policy advice, "
@@ -58,39 +73,10 @@ with st.form(key="my_form"):
 
         selectedModel = ModelType
         if ModelType == "BERT (bert-base-cased-squad2)":
-            # kw_model = KeyBERT(model=roberta)
-
-            @st.cache(allow_output_mutation=True)
-            def load_model():
-                modelname = 'deepset/bert-base-cased-squad2'
-                model = BertForQuestionAnswering.from_pretrained(modelname)
-                tokenizer = AutoTokenizer.from_pretrained(modelname)
-                nlp = pipeline('question-answering', model=model, tokenizer=tokenizer)
-                return nlp
-
-            nlp = load_model()
+            nlp = nlp1
 
         if ModelType == "tinyroberta":
-            @st.cache(allow_output_mutation=True)
-            def load_model():
-                modelname_tiny = 'deepset/tinyroberta-squad2'
-                model_tiny = AutoModelForQuestionAnswering.from_pretrained(modelname_tiny)
-                tokenizer_tiny = AutoTokenizer.from_pretrained(modelname_tiny)
-                nlp = pipeline('question-answering', model=model_tiny, tokenizer=tokenizer_tiny)
-                return nlp
-
-            nlp = load_model()
-
-        else:
-            modelname = 'deepset/bert-base-cased-squad2'
-            model = BertForQuestionAnswering.from_pretrained(modelname)
-            tokenizer = AutoTokenizer.from_pretrained(modelname)
-            nlp1 = pipeline('question-answering', model=model, tokenizer=tokenizer)
-            modelname_tiny = 'deepset/tinyroberta-squad2'
-            model_tiny = AutoModelForQuestionAnswering.from_pretrained(modelname_tiny)
-            tokenizer_tiny = AutoTokenizer.from_pretrained(modelname_tiny)
-            nlp2 = pipeline('question-answering', model=model_tiny, tokenizer=tokenizer_tiny)
-
+            nlp = nlp2
 
 
     with st.expander("ICTC", expanded=True):
@@ -127,7 +113,7 @@ with st.form(key="my_form"):
             'question': user_input,
             'context': context
             })
-            
+
         st.write("Answer: ",result['answer'])
         st.markdown("")
         score = result['score']
