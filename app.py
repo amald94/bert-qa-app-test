@@ -4,26 +4,10 @@ from transformers import pipeline
 
 
 st.set_page_config(
-    page_title="QA - BERT Model!!!")
+    page_title="QA - BERT Model!!!",
+    layout="wide")
 
-
-def _max_width_():
-    max_width_str = f"max-width: 1400px;"
-    st.markdown(
-        f"""
-    <style>
-    .reportview-container .main .block-container{{
-        {max_width_str}
-    }}
-    </style>    
-    """,
-        unsafe_allow_html=True,
-    )
-
-
-_max_width_()
-
-c30, c31, c32 = st.columns([8, 1, 3])
+c30,  = st.columns([1])
 
 with c30:
     # st.image("logo.png", width=400)
@@ -62,36 +46,62 @@ context = (
            "In June 2016, Rob founded the Open Data Institute Ottawa Node to help crystallize the open data movement in Ottawa."
            )
 
-with st.expander("ICTC", expanded=True):
+with st.form(key="my_form"):
 
-    st.write(
-        context
-    )
+    ce, c1, ce, c2, c3 = st.columns([0.07, 1, 0.07, 5, 0.07])
+    with c1:
+        ModelType = st.radio(
+            "Choose your model",
+            ["BERT (bert-base-cased-squad2)", "tinyroberta"],
+            help="At present, you can choose between 2 models (Flair or DistilBERT) to embed your text. More to come!",
+        )
+
+        if ModelType == "BERT (bert-base-cased-squad2)":
+            # kw_model = KeyBERT(model=roberta)
+
+            @st.cache(allow_output_mutation=True)
+            def load_model():
+                modelname = 'deepset/bert-base-cased-squad2'
+                model = BertForQuestionAnswering.from_pretrained(modelname)
+                tokenizer = AutoTokenizer.from_pretrained(modelname)
+                nlp = pipeline('question-answering', model=model, tokenizer=tokenizer)
+                return nlp
+
+            nlp = load_model()
+
+        else:
+            @st.cache(allow_output_mutation=True)
+            def load_model():
+                modelname_tiny = 'deepset/tinyroberta-squad2'
+                model_tiny = AutoModelForQuestionAnswering.from_pretrained(modelname_tiny)
+                tokenizer_tiny = AutoTokenizer.from_pretrained(modelname_tiny)
+                nlp = pipeline('question-answering', model=model_tiny, tokenizer=tokenizer_tiny)
+                return nlp
+
+            nlp = load_model()
+
+
+    with st.expander("ICTC", expanded=True):
+
+        st.write(
+            context
+        )
+
+        st.markdown("")
 
     st.markdown("")
+    st.markdown("Do you have a question about the executive team or ICTC in general ❓")
+    user_input = st.text_area('Type your question here.')
+    submit_button = st.form_submit_button(label="Ask")
 
-st.markdown("")
-st.markdown("Do you have a question about the executive team or ICTC in general ❓")
-user_input = st.text_area('Type your question here.')
-button = st.button("Ask")
+    if user_input and submit_button :
 
-@st.cache(allow_output_mutation=True)
-def get_model():
-
-    modelname = 'deepset/tinyroberta-squad2'
-    model = AutoModelForQuestionAnswering.from_pretrained(modelname)
-    tokenizer = AutoTokenizer.from_pretrained(modelname)
-
-    nlp = pipeline('question-answering', model=model, tokenizer=tokenizer)
-    return nlp
-
-
-nlp = get_model()
-
-if user_input and button :
-
-    result = nlp({
-    'question': user_input,
-    'context': context
-  })
-    st.write("Answer: ",result['answer'])
+        result = nlp({
+        'question': user_input,
+        'context': context
+    })
+        st.write("Answer: ",result['answer'])
+        st.markdown("")
+        score = result['score']
+        if score < 0.05:
+            st.write(f"The answer is in low confidence - {score}, visit ictc website for more info.")
