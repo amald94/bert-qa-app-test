@@ -53,7 +53,7 @@ with st.form(key="my_form"):
         ModelType = st.radio(
             "Choose your model",
             ["BERT (bert-base-cased-squad2)", "tinyroberta"],
-            help="At present, you can choose between 2 models (Flair or DistilBERT) to embed your text. More to come!",
+            help="At present, you can choose between 2 models (BERT or TinyBert) to embed your text.",
         )
 
         if ModelType == "BERT (bert-base-cased-squad2)":
