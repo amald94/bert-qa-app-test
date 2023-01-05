@@ -8,7 +8,7 @@ st.set_page_config(
     layout="wide")
 
 c30,  = st.columns([1])
-
+selectedModel = ""
 with c30:
     # st.image("logo.png", width=400)
     st.title("🔎 BERT QA App! ")
@@ -52,10 +52,11 @@ with st.form(key="my_form"):
     with c1:
         ModelType = st.radio(
             "Choose your model",
-            ["BERT (bert-base-cased-squad2)", "tinyroberta"],
+            ["BERT (bert-base-cased-squad2)", "tinyroberta","Combined"],
             help="At present, you can choose between 2 models (BERT or TinyBert) to embed your text.",
         )
 
+        selectedModel = ModelType
         if ModelType == "BERT (bert-base-cased-squad2)":
             # kw_model = KeyBERT(model=roberta)
 
@@ -69,7 +70,7 @@ with st.form(key="my_form"):
 
             nlp = load_model()
 
-        else:
+        if ModelType == "tinyroberta":
             @st.cache(allow_output_mutation=True)
             def load_model():
                 modelname_tiny = 'deepset/tinyroberta-squad2'
@@ -79,6 +80,17 @@ with st.form(key="my_form"):
                 return nlp
 
             nlp = load_model()
+
+        else:
+            modelname = 'deepset/bert-base-cased-squad2'
+            model = BertForQuestionAnswering.from_pretrained(modelname)
+            tokenizer = AutoTokenizer.from_pretrained(modelname)
+            nlp1 = pipeline('question-answering', model=model, tokenizer=tokenizer)
+            modelname_tiny = 'deepset/tinyroberta-squad2'
+            model_tiny = AutoModelForQuestionAnswering.from_pretrained(modelname_tiny)
+            tokenizer_tiny = AutoTokenizer.from_pretrained(modelname_tiny)
+            nlp2 = pipeline('question-answering', model=model_tiny, tokenizer=tokenizer_tiny)
+
 
 
     with st.expander("ICTC", expanded=True):
@@ -96,10 +108,26 @@ with st.form(key="my_form"):
 
     if user_input and submit_button :
 
-        result = nlp({
-        'question': user_input,
-        'context': context
-    })
+        if selectedModel=="Combined":
+            result1 = nlp1({
+                'question': user_input,
+                'context': context
+            })
+            result2 = nlp2({
+                'question': user_input,
+                'context': context
+            })
+
+            if result1['score'] > result2['score']:
+                result = result1
+            else:
+                result = result2
+        else:
+            result = nlp({
+            'question': user_input,
+            'context': context
+            })
+            
         st.write("Answer: ",result['answer'])
         st.markdown("")
         score = result['score']
